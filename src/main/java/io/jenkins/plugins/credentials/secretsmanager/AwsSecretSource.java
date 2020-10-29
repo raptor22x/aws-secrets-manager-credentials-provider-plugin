@@ -11,8 +11,6 @@ import com.amazonaws.services.secretsmanager.model.GetSecretValueResult;
 import com.amazonaws.services.secretsmanager.model.ResourceNotFoundException;
 import hudson.Extension;
 import io.jenkins.plugins.casc.SecretSource;
-import io.jenkins.plugins.credentials.secretsmanager.config.EndpointConfiguration;
-import io.jenkins.plugins.credentials.secretsmanager.config.PluginConfiguration;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -59,16 +57,13 @@ public class AwsSecretSource extends SecretSource {
     }
 
     private static AWSSecretsManager createClient() throws SdkClientException {
-        final PluginConfiguration config = PluginConfiguration.getInstance();
-        final EndpointConfiguration ec = config.getEndpointConfiguration();
-
         final AWSSecretsManagerClientBuilder builder = AWSSecretsManagerClient.builder();
 
-        final Optional<String> maybeServiceEndpoint = getServiceEndpoint(ec);
-        final Optional<String> maybeSigningRegion = getSigningRegion(ec);
+        final Optional<String> maybeServiceEndpoint = getServiceEndpoint();
+        final Optional<String> maybeSigningRegion = getSigningRegion();
 
         if (maybeServiceEndpoint.isPresent() && maybeSigningRegion.isPresent()) {
-            LOG.log(Level.CONFIG, "Custom Endpoint Configuration: {0}", ec);
+            LOG.log(Level.CONFIG, "Custom Endpoint Configuration");
 
             final AwsClientBuilder.EndpointConfiguration endpointConfiguration =
                     new AwsClientBuilder.EndpointConfiguration(maybeServiceEndpoint.get(), maybeSigningRegion.get());
@@ -80,19 +75,11 @@ public class AwsSecretSource extends SecretSource {
         return builder.build();
     }
 
-    private static Optional<String> getServiceEndpoint(EndpointConfiguration ec) {
-        if ((ec != null) && (ec.getServiceEndpoint() != null)) {
-            return Optional.of(ec.getServiceEndpoint());
-        } else {
-            return Optional.ofNullable(System.getenv(AWS_SERVICE_ENDPOINT));
-        }
+    private static Optional<String> getServiceEndpoint() {
+        return Optional.ofNullable(System.getenv(AWS_SERVICE_ENDPOINT));
     }
 
-    private static Optional<String> getSigningRegion(EndpointConfiguration ec) {
-        if ((ec != null) && (ec.getSigningRegion() != null)) {
-            return Optional.of(ec.getSigningRegion());
-        } else {
-            return Optional.ofNullable(System.getenv(AWS_SIGNING_REGION));
-        }
+    private static Optional<String> getSigningRegion() {
+        return Optional.ofNullable(System.getenv(AWS_SIGNING_REGION));
     }
 }

@@ -2,28 +2,26 @@ package io.jenkins.plugins.credentials.secretsmanager.config;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.client.builder.AwsClientBuilder;
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.secretsmanager.AWSSecretsManager;
 import com.amazonaws.services.secretsmanager.AWSSecretsManagerClient;
 import com.amazonaws.services.secretsmanager.model.ListSecretsRequest;
-
+import hudson.Extension;
+import hudson.model.AbstractDescribableImpl;
+import hudson.model.Descriptor;
 import hudson.util.FormValidation;
-
+import hudson.util.ListBoxModel;
 import io.jenkins.plugins.credentials.secretsmanager.Messages;
+import jenkins.model.Jenkins;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.verb.POST;
 
+import javax.annotation.Nonnull;
 import java.io.Serializable;
 import java.util.Objects;
-
-import javax.annotation.Nonnull;
-
-import hudson.Extension;
-import hudson.model.AbstractDescribableImpl;
-import hudson.model.Descriptor;
-import jenkins.model.Jenkins;
 
 public class EndpointConfiguration extends AbstractDescribableImpl<EndpointConfiguration>
         implements Serializable {
@@ -93,6 +91,15 @@ public class EndpointConfiguration extends AbstractDescribableImpl<EndpointConfi
         @Nonnull
         public String getDisplayName() {
             return Messages.endpointConfiguration();
+        }
+
+        public ListBoxModel doFillSigningRegionItems() {
+            final ListBoxModel regions = new ListBoxModel();
+            regions.add("", "");
+            for (Regions s : Regions.values()) {
+                regions.add(s.getDescription(), s.getName());
+            }
+            return regions;
         }
 
         /**

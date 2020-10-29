@@ -1,8 +1,9 @@
 unclassified:
   awsCredentialsProvider:
-    endpointConfiguration:
-      serviceEndpoint: http://localhost:4584
-      signingRegion: us-east-1
+    client:
+      endpointConfiguration:
+        serviceEndpoint: http://localhost:4584
+        signingRegion: us-east-1
     listSecrets:
       filters:
         - key: tag-key

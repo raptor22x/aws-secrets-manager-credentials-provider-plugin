@@ -1,10 +1,13 @@
 package io.jenkins.plugins.credentials.secretsmanager.config;
 
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.secretsmanager.AWSSecretsManager;
 import com.amazonaws.services.secretsmanager.AWSSecretsManagerClientBuilder;
 import hudson.Extension;
+import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
+import hudson.util.ListBoxModel;
 import io.jenkins.plugins.credentials.secretsmanager.Messages;
 import io.jenkins.plugins.credentials.secretsmanager.config.credentialsProvider.CredentialsProvider;
 import io.jenkins.plugins.credentials.secretsmanager.config.credentialsProvider.DefaultAWSCredentialsProviderChain;
@@ -24,10 +27,10 @@ public class Client extends AbstractDescribableImpl<Client> implements Serializa
 
     private EndpointConfiguration endpointConfiguration;
 
-    private Region region;
+    private String region;
 
     @DataBoundConstructor
-    public Client(CredentialsProvider credentialsProvider, EndpointConfiguration endpointConfiguration, Region region) {
+    public Client(CredentialsProvider credentialsProvider, EndpointConfiguration endpointConfiguration, String region) {
         this.credentialsProvider = credentialsProvider;
         this.endpointConfiguration = endpointConfiguration;
         this.region = region;
@@ -51,13 +54,13 @@ public class Client extends AbstractDescribableImpl<Client> implements Serializa
         this.credentialsProvider = credentialsProvider;
     }
 
-    public Region getRegion() {
+    public String getRegion() {
         return region;
     }
 
     @DataBoundSetter
-    public void setRegion(Region region) {
-        this.region = region;
+    public void setRegion(String region) {
+        this.region = Util.fixEmptyAndTrim(region);
     }
 
     public AWSSecretsManager build() {
@@ -71,8 +74,8 @@ public class Client extends AbstractDescribableImpl<Client> implements Serializa
             builder.setEndpointConfiguration(endpointConfiguration.build());
         }
 
-        if (region != null) {
-            builder.setRegion(region.getRegion());
+        if (region != null && !region.isEmpty()) {
+            builder.setRegion(region);
         }
 
         return builder.build();
@@ -106,6 +109,15 @@ public class Client extends AbstractDescribableImpl<Client> implements Serializa
         @Nonnull
         public String getDisplayName() {
             return Messages.client();
+        }
+
+        public ListBoxModel doFillRegionItems() {
+            final ListBoxModel regions = new ListBoxModel();
+            regions.add("", "");
+            for (Regions s : Regions.values()) {
+                regions.add(s.getDescription(), s.getName());
+            }
+            return regions;
         }
     }
 }

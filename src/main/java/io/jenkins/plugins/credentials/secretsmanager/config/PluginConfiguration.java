@@ -24,18 +24,18 @@ public class PluginConfiguration extends GlobalConfiguration {
     private static final Duration NO_CACHE = Duration.ofNanos(1);
     private static final Duration DEFAULT_CACHE = Duration.ofSeconds(300);
 
-    private Beta beta;
-
     /**
      * Whether to cache the credentials or not. By default, credentials are cached for 5 minutes. Caching can be turned off for development purposes.
      */
     private Boolean cache;
 
     /**
-     * The AWS Secrets Manager endpoint configuration. If this is null, the default will be used. If
-     * this is specified, the user's override will be used.
+     * Secrets Manager client configuration
      */
-    private EndpointConfiguration endpointConfiguration;
+    private Client client;
+
+    @Deprecated
+    private transient EndpointConfiguration endpointConfiguration;
 
     @Deprecated
     private transient Filters filters;
@@ -61,6 +61,11 @@ public class PluginConfiguration extends GlobalConfiguration {
     }
 
     protected Object readResolve() {
+        if (endpointConfiguration != null) {
+            client = new Client(null, endpointConfiguration, null);
+            endpointConfiguration = null;
+        }
+
         if (filters != null && filters.getTag() != null) {
             final Tag tag = filters.getTag();
             final Filter tagKey = new Filter(FilterNameStringType.TagKey.toString(), Collections.singletonList(new Value(tag.getKey())));
@@ -70,17 +75,6 @@ public class PluginConfiguration extends GlobalConfiguration {
         }
 
         return this;
-    }
-
-    public Beta getBeta() {
-        return beta;
-    }
-
-    @DataBoundSetter
-    @SuppressWarnings("unused")
-    public void setBeta(Beta beta) {
-        this.beta = beta;
-        save();
     }
 
     public Boolean getCache() {
@@ -94,14 +88,14 @@ public class PluginConfiguration extends GlobalConfiguration {
         save();
     }
 
-    public EndpointConfiguration getEndpointConfiguration() {
-        return endpointConfiguration;
+    public Client getClient() {
+        return client;
     }
 
     @DataBoundSetter
     @SuppressWarnings("unused")
-    public void setEndpointConfiguration(EndpointConfiguration endpointConfiguration) {
-        this.endpointConfiguration = endpointConfiguration;
+    public void setClient(Client client) {
+        this.client = client;
         save();
     }
 
@@ -121,8 +115,7 @@ public class PluginConfiguration extends GlobalConfiguration {
         // This method is unnecessary, except to apply the following workaround.
         // Workaround: Set any optional struct fields to null before binding configuration.
         // https://groups.google.com/forum/#!msg/jenkinsci-dev/MuRJ-yPRRoo/AvoPZAgbAAAJ
-        this.beta = null;
-        this.endpointConfiguration = null;
+        this.client = null;
         this.listSecrets = null;
 
         req.bindJSON(this, json);
